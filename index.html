@@ -28,8 +28,8 @@
 
 <script>
   const canvas = document.querySelector("canvas"); //recuperamos el canvas
-  const h1 = document.querySelector("h1");
-  const div = document.getElementById("controlls");
+  const h1 = document.querySelector("h1"); //recuperamos el h1 para el score
+  const div = document.getElementById("controlls"); //recuperamos el div para la info de los controles
 
   div.style.textAlign = "center";
   div.style.marginTop = "20px";
@@ -267,8 +267,9 @@
       ballMovement();
       paddleMovement();
       checkWin();
-      h1.innerHTML = `Score: ${SCORE}`;
+      h1.innerHTML = `Score: ${SCORE}`; //print del score
     } else {
+      // si no se ha iniciado el juego
       ctx.font = "16px Arial";
       ctx.fillStyle = "#fff";
       message = "Press SPACE to start";
