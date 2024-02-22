@@ -19,7 +19,7 @@
 <body>
   <canvas></canvas>
   <h1></h1>
-  <div>
+  <div id="controlls">
     <p>Controles:</p>
     <p>← → para mover la paleta</p>
     <p>SPACE para pausar/resumir el juego</p>
@@ -29,10 +29,14 @@
 <script>
   const canvas = document.querySelector("canvas"); //recuperamos el canvas
   const h1 = document.querySelector("h1");
-  const div = document.querySelector("div");
+  const div = document.getElementById("controlls");
+
   div.style.textAlign = "center";
   div.style.marginTop = "20px";
+  div.style.fontSize = "15px";
+
   h1.style.textAlign = "center";
+  h1.style.fontSize = "30px";
   const ctx = canvas.getContext("2d"); //contexto 2d
 
   canvas.width = 448;
@@ -47,13 +51,14 @@
   let startGame = false;
 
   const PADDLE_SENSITIVITY = 3;
+  let BALL_SPEED = 1;
 
   //Variables de la pelota
   const ballRadius = 4;
   let x = canvas.width / 2;
   let y = canvas.height - 40;
-  let dx = 1;
-  let dy = -1;
+  let dx = BALL_SPEED;
+  let dy = -BALL_SPEED;
 
   //Variables de la paleta
   const paddleHeight = 10;
@@ -263,6 +268,9 @@
       paddleMovement();
       checkWin();
       h1.innerHTML = `Score: ${SCORE}`;
+      if (SCORE % 1000 == 0 && SCORE != 0) {
+        BALL_SPEED += 0.5;
+      }
     } else {
       ctx.font = "16px Arial";
       ctx.fillStyle = "#fff";
