@@ -18,14 +18,26 @@
 
 <body>
   <canvas></canvas>
+  <h1></h1>
+  <div>
+    <p>Controles:</p>
+    <p>← → para mover la paleta</p>
+    <p>SPACE para pausar/resumir el juego</p>
+  </div>
 </body>
 
 <script>
   const canvas = document.querySelector("canvas"); //recuperamos el canvas
+  const h1 = document.querySelector("h1");
+  const div = document.querySelector("div");
+  div.style.textAlign = "center";
+  div.style.marginTop = "20px";
+  h1.style.textAlign = "center";
   const ctx = canvas.getContext("2d"); //contexto 2d
 
   canvas.width = 448;
   canvas.height = 400;
+  let SCORE = 0;
 
   const $sprite = document.querySelector("#spite");
   const $bricks = document.querySelector("#bricks");
@@ -143,6 +155,7 @@
         if (isBallSameXAsBrick && isBallSameYAsBrick) {
           dy = -dy;
           currentBrick.status = BRICK_STATUS.DEAD;
+          SCORE += 100;
         }
       }
     }
@@ -249,6 +262,7 @@
       ballMovement();
       paddleMovement();
       checkWin();
+      h1.innerHTML = `Score: ${SCORE}`;
     } else {
       ctx.font = "16px Arial";
       ctx.fillStyle = "#fff";
