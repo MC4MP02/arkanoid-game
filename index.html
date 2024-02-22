@@ -1,0 +1,264 @@
+<title>Arkanoid en JavaScript</title>
+<style>
+  body {
+    background-color: #f0f0f0;
+  }
+  canvas {
+    border: 4px solid #fff;
+    border-bottom: transparent;
+    background: url("background-arkanoid.png") repeat;
+    margin: 0 auto;
+    display: block;
+    box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.4);
+  }
+</style>
+
+<img hidden id="spite" src="./sprite.png" alt="Sprite Arkanoid" />
+<img hidden id="bricks" src="./bricks.png" alt="Bricks Arkanoid" />
+
+<body>
+  <canvas></canvas>
+</body>
+
+<script>
+  const canvas = document.querySelector("canvas"); //recuperamos el canvas
+  const ctx = canvas.getContext("2d"); //contexto 2d
+
+  canvas.width = 448;
+  canvas.height = 400;
+
+  const $sprite = document.querySelector("#spite");
+  const $bricks = document.querySelector("#bricks");
+
+  let rightPressed = false;
+  let leftPressed = false;
+  let startGame = false;
+
+  const PADDLE_SENSITIVITY = 3;
+
+  //Variables de la pelota
+  const ballRadius = 4;
+  let x = canvas.width / 2;
+  let y = canvas.height - 40;
+  let dx = 1;
+  let dy = -1;
+
+  //Variables de la paleta
+  const paddleHeight = 10;
+  const paddleWidth = 50;
+  let paddleX = (canvas.width - paddleWidth) / 2;
+  let paddleY = canvas.height - paddleHeight - 20;
+
+  //Variables de los ladrillos
+  const brickRowCount = 7;
+  const brickColumnCount = 13;
+  const brickWidth = 32;
+  const brickHeight = 16;
+  const brickPadding = 0;
+  const brickOffsetTop = 80;
+  const brickOffsetLeft = 16;
+  const bricks = [];
+
+  const BRICK_STATUS = {
+    ALIVE: 1,
+    DEAD: 0,
+  };
+
+  for (let c = 0; c < brickColumnCount; c++) {
+    bricks[c] = [];
+    for (let r = 0; r < brickRowCount; r++) {
+      const brickX = c * (brickWidth + brickPadding) + brickOffsetLeft;
+      const brickY = r * (brickHeight + brickPadding) + brickOffsetTop;
+
+      //Color random a cada ladrillo
+      const random = Math.floor(Math.random() * 8); //Random de 0 a 7
+
+      bricks[c][r] = {
+        x: brickX,
+        y: brickY,
+        status: BRICK_STATUS.ALIVE,
+        color: random,
+      };
+    }
+  }
+
+  function clearCanvas() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+
+  function drawBall() {
+    ctx.beginPath();
+    ctx.arc(x, y, ballRadius, 0, Math.PI * 2);
+    ctx.fillStyle = "#fff";
+    ctx.fill();
+    ctx.closePath();
+  }
+
+  function drawPaddle() {
+    ctx.drawImage(
+      $sprite,
+      29,
+      174,
+      paddleWidth,
+      paddleHeight,
+      paddleX,
+      paddleY,
+      paddleWidth,
+      paddleHeight
+    );
+  }
+
+  function drawBricks() {
+    for (let c = 0; c < brickColumnCount; c++) {
+      for (let r = 0; r < brickRowCount; r++) {
+        const currentBrick = bricks[c][r];
+        if (currentBrick.status === BRICK_STATUS.DEAD) continue;
+
+        ctx.drawImage(
+          $bricks,
+          currentBrick.color * 32,
+          0,
+          brickWidth, //31
+          brickHeight, //14
+          currentBrick.x,
+          currentBrick.y,
+          brickWidth,
+          brickHeight
+        );
+      }
+    }
+  }
+
+  function collisionDetection() {
+    for (let c = 0; c < brickColumnCount; c++) {
+      for (let r = 0; r < brickRowCount; r++) {
+        const currentBrick = bricks[c][r];
+        if (currentBrick.status === BRICK_STATUS.DEAD) continue;
+
+        const isBallSameXAsBrick =
+          x > currentBrick.x && x < currentBrick.x + brickWidth;
+        const isBallSameYAsBrick =
+          y > currentBrick.y && y < currentBrick.y + brickHeight;
+
+        if (isBallSameXAsBrick && isBallSameYAsBrick) {
+          dy = -dy;
+          currentBrick.status = BRICK_STATUS.DEAD;
+        }
+      }
+    }
+  }
+
+  const isBallSameXAsPaddle =
+    x + dx < paddleX + paddleWidth && x + dx > paddleX;
+  const isBallSameYAsPaddle = y + dy > paddleY;
+
+  function ballMovement() {
+    if (
+      x + dx < paddleX + paddleWidth &&
+      x + dx > paddleX &&
+      y + dy > paddleY
+    ) {
+      dy = -dy;
+    }
+    if (x + dx > canvas.width - ballRadius || x + dx < ballRadius) {
+      dx = -dx;
+    }
+
+    //podriamos poner < 0 pero para ser mas exacto, radio de la pelota
+    if (y + dy < ballRadius) {
+      dy = -dy;
+    }
+
+    if (y + dy > canvas.height - ballRadius) {
+      console.log("GAME OVER");
+      document.location.reload();
+    }
+
+    x += dx;
+    y += dy;
+  }
+
+  function paddleMovement() {
+    if (rightPressed && paddleX < canvas.width - paddleWidth) {
+      paddleX += PADDLE_SENSITIVITY;
+    } else if (leftPressed && paddleX > 0) {
+      paddleX -= PADDLE_SENSITIVITY;
+    }
+  }
+
+  //EVENTOS
+  function initEvents() {
+    document.addEventListener("keydown", keyDownHandler);
+    document.addEventListener("keyup", keyUpHandler);
+
+    function keyDownHandler(event) {
+      const { key } = event;
+      if (key === "Right" || key === "ArrowRight") {
+        rightPressed = true;
+      } else if (key === "Left" || key === "ArrowLeft") {
+        leftPressed = true;
+      }
+
+      if (key === " ") {
+        startGame = !startGame;
+      }
+    }
+
+    function keyUpHandler(event) {
+      const { key } = event;
+      if (key === "Right" || key === "ArrowRight") {
+        rightPressed = false;
+      } else if (key === "Left" || key === "ArrowLeft") {
+        leftPressed = false;
+      }
+    }
+  }
+
+  function checkWin() {
+    let totalBricks = 0;
+    for (let c = 0; c < brickColumnCount; c++) {
+      for (let r = 0; r < brickRowCount; r++) {
+        if (bricks[c][r].status === BRICK_STATUS.ALIVE) {
+          totalBricks++;
+        }
+      }
+    }
+
+    if (totalBricks === 0) {
+      clearCanvas();
+      ctx.font = "16px Arial";
+      ctx.fillStyle = "#fff";
+      message = "YOU WIN, CONGRATULATIONS!";
+      ctx.fillText(message, 100, canvas.height / 2);
+    }
+  }
+
+  function draw() {
+    //BORRAR CANVAS
+    clearCanvas();
+
+    //ELEMENTOS
+    if (startGame) {
+      drawBall();
+      drawPaddle();
+      drawBricks();
+      //SCORE
+
+      //MOVIMIENTO y COLISIONES
+      collisionDetection();
+      ballMovement();
+      paddleMovement();
+      checkWin();
+    } else {
+      ctx.font = "16px Arial";
+      ctx.fillStyle = "#fff";
+      message = "Press SPACE to start";
+      ctx.fillText(message, 148, canvas.height / 2);
+    }
+
+    window.requestAnimationFrame(draw); //llamamos a la funcion draw en cada frame
+  }
+
+  draw();
+  initEvents();
+</script>
