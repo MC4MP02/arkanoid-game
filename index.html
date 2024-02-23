@@ -50,8 +50,8 @@
   let leftPressed = false;
   let startGame = false;
 
-  const PADDLE_SENSITIVITY = 3;
-  let BALL_SPEED = 1;
+  const PADDLE_SENSITIVITY = 5;
+  let BALL_SPEED = 3;
 
   //Variables de la pelota
   const ballRadius = 4;
@@ -188,7 +188,7 @@
     }
 
     if (y + dy > canvas.height - ballRadius) {
-      console.log("GAME OVER");
+      startGame=false
       document.location.reload();
     }
 
